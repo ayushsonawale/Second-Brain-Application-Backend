@@ -18,10 +18,10 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const db_1 = require("./db");
-const middleware_1 = require("./middleware");
-const hashCreate_1 = require("./hashCreate");
-const config_1 = require("./config");
+const db_1 = require("../src/db");
+const middleware_1 = require("../src/middleware");
+const hashCreate_1 = require("../src/hashCreate");
+const config_1 = require("../src/config");
 const app = (0, express_1.default)();
 // ====== Middleware ======
 app.use((0, cors_1.default)());

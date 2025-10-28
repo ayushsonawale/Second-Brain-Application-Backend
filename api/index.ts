@@ -4,10 +4,10 @@ import jwt from "jsonwebtoken";
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
-import { contentModel, linkModel, userModel } from "./db";
-import { userMiddleware } from "./middleware";
-import { randomHashCreate } from "./hashCreate";
-import { JWT_PASSWORD, MONGO_URI } from "./config";
+import { contentModel, linkModel, userModel } from "../src/db";
+import { userMiddleware } from "../src/middleware";
+import { randomHashCreate } from "../src/hashCreate";
+import { JWT_PASSWORD, MONGO_URI } from "../src/config";
 
 
 const app = express();
