@@ -1,22 +1,31 @@
-import mongoose, { model, Schema } from "mongoose";
-mongoose.connect('mongodb+srv://ayushsonawale:1234@cluster0.yjnym.mongodb.net/second_brain')
+import mongoose, { Schema, model } from "mongoose";
+
+// User Schema
 const UserSchema = new Schema({
-    username: {type: String, unique: true},
-    password: String
-})
+  username: { type: String, unique: true, required: true },
+  password: { type: String, required: true },
+});
 
+// Content Schema
 const ContentSchema = new Schema({
-    title: String,
-    link: String,
-    tags: [{type: mongoose.Types.ObjectId, ref: 'Tag'}],
-    type: String, 
-    userId: {type: mongoose.Types.ObjectId, ref: 'User', required: true}
-})
+  title: String,
+  link: String,
+  tags: [{ type: mongoose.Types.ObjectId, ref: "Tag" }],
+  type: String,
+  userId: { type: mongoose.Types.ObjectId, ref: "User", required: true },
+});
 
+// Link Schema
 const LinkSchema = new Schema({
-    hash : String,
-    userId: {type: mongoose.Types.ObjectId, ref: 'User', required: true, unique: true}
-})
-export const userModel = model ('User', UserSchema)
-export const contentModel = model('Content' , ContentSchema)
-export const linkModel = model('Links', LinkSchema)
+  hash: String,
+  userId: {
+    type: mongoose.Types.ObjectId,
+    ref: "User",
+    required: true,
+    unique: true,
+  },
+});
+
+export const userModel = model("User", UserSchema);
+export const contentModel = model("Content", ContentSchema);
+export const linkModel = model("Link", LinkSchema);

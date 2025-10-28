@@ -3,13 +3,12 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import cors from "cors";
 import dotenv from "dotenv";
-
+dotenv.config();
 import { contentModel, linkModel, userModel } from "./db";
 import { userMiddleware } from "./middleware";
 import { randomHashCreate } from "./hashCreate";
 import { JWT_PASSWORD, MONGO_URI } from "./config";
 
-dotenv.config();
 
 const app = express();
 

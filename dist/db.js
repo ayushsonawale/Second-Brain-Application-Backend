@@ -35,22 +35,29 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.linkModel = exports.contentModel = exports.userModel = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-mongoose_1.default.connect('mongodb+srv://ayushsonawale:1234@cluster0.yjnym.mongodb.net/second_brain');
+// User Schema
 const UserSchema = new mongoose_1.Schema({
-    username: { type: String, unique: true },
-    password: String
+    username: { type: String, unique: true, required: true },
+    password: { type: String, required: true },
 });
+// Content Schema
 const ContentSchema = new mongoose_1.Schema({
     title: String,
     link: String,
-    tags: [{ type: mongoose_1.default.Types.ObjectId, ref: 'Tag' }],
+    tags: [{ type: mongoose_1.default.Types.ObjectId, ref: "Tag" }],
     type: String,
-    userId: { type: mongoose_1.default.Types.ObjectId, ref: 'User', required: true }
+    userId: { type: mongoose_1.default.Types.ObjectId, ref: "User", required: true },
 });
+// Link Schema
 const LinkSchema = new mongoose_1.Schema({
     hash: String,
-    userId: { type: mongoose_1.default.Types.ObjectId, ref: 'User', required: true, unique: true }
+    userId: {
+        type: mongoose_1.default.Types.ObjectId,
+        ref: "User",
+        required: true,
+        unique: true,
+    },
 });
-exports.userModel = (0, mongoose_1.model)('User', UserSchema);
-exports.contentModel = (0, mongoose_1.model)('Content', ContentSchema);
-exports.linkModel = (0, mongoose_1.model)('Links', LinkSchema);
+exports.userModel = (0, mongoose_1.model)("User", UserSchema);
+exports.contentModel = (0, mongoose_1.model)("Content", ContentSchema);
+exports.linkModel = (0, mongoose_1.model)("Link", LinkSchema);
