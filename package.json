@@ -1,24 +1,26 @@
 {
-  "name": "week15-second-brain-app",
+  "name": "second-brain-backend",
   "version": "1.0.0",
-  "main": "index.js",
- "scripts": {
-  "build": "tsc",
-  "start": "node dist/index.js",
-  "vercel-build": "npm run build"
-},
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
   "keywords": [],
-  "author": "",
+  "author": "Ayush Sonawale",
   "license": "ISC",
-  "description": "",
+  "description": "Backend for Second Brain App (Node + TypeScript + Express)",
   "dependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^22.8.1",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.12.2",
+    "mongoose": "^8.12.2"
+  },
+  "devDependencies": {
     "typescript": "^5.8.2"
   }
 }
