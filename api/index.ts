@@ -13,16 +13,7 @@ import { JWT_PASSWORD, MONGO_URI } from "../src/config";
 const app = express();
 
 // ====== Middleware ======
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173", // for local frontend dev
-      "https://secondbrainapplication-git-master-ayushsonawales-projects.vercel.app", // your frontend prod
-    ],
-    methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
-    credentials: true,
-  })
-);
+app.use(cors());
 app.use(express.json());
 
 // ====== MongoDB Connection ======
@@ -32,11 +23,6 @@ mongoose
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // ====== Routes ======
-
-// --- Health check ---
-app.get("/", (req, res) => {
-  res.send("🚀 Backend is live and running!");
-});
 
 // --- Signup ---
 app.post("/api/v1/signup", async (req, res) => {
@@ -53,6 +39,7 @@ app.post("/api/v1/signup", async (req, res) => {
 app.post("/api/v1/signin", async (req, res) => {
   const { username, password } = req.body;
   const existingUser = await userModel.findOne({ username, password });
+
   if (existingUser) {
     const token = jwt.sign({ id: existingUser._id }, JWT_PASSWORD);
     res.json({ token });
@@ -64,6 +51,7 @@ app.post("/api/v1/signin", async (req, res) => {
 // --- Add Content ---
 app.post("/api/v1/content", userMiddleware, async (req, res) => {
   const { link, type, title } = req.body;
+
   await contentModel.create({
     link,
     type,
@@ -72,6 +60,7 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
     userId: req.userId,
     tags: [],
   });
+
   res.json({ message: "Content added ✅" });
 });
 
@@ -79,9 +68,7 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
 app.get("/api/v1/content", userMiddleware, async (req, res) => {
   // @ts-ignore
   const userId = req.userId;
-  const content = await contentModel
-    .find({ userId })
-    .populate("userId", "username");
+  const content = await contentModel.find({ userId }).populate("userId", "username");
   res.json({ content });
 });
 
@@ -99,13 +86,16 @@ app.delete("/api/v1/content", userMiddleware, async (req, res) => {
 // --- Share Brain ---
 app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
   const { share } = req.body;
+
   if (share) {
     const existingLink = await linkModel.findOne({
       // @ts-ignore
       userId: req.userId,
     });
 
-    if (existingLink) return res.json({ hash: existingLink.hash });
+    if (existingLink) {
+      return res.json({ hash: existingLink.hash });
+    }
 
     const hash = randomHashCreate(10);
     await linkModel.create({
@@ -120,6 +110,7 @@ app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
       // @ts-ignore
       userId: req.userId,
     });
+
     res.json({ message: "Removed shared link ❌" });
   }
 });
@@ -129,7 +120,9 @@ app.get("/api/v1/brain/:shareLink", async (req, res) => {
   const hash = req.params.shareLink;
 
   const link = await linkModel.findOne({ hash });
-  if (!link) return res.status(411).json({ message: "Invalid share link ❌" });
+  if (!link) {
+    return res.status(411).json({ message: "Invalid share link ❌" });
+  }
 
   const content = await contentModel.find({
     // @ts-ignore
@@ -141,7 +134,9 @@ app.get("/api/v1/brain/:shareLink", async (req, res) => {
     _id: link.userId,
   });
 
-  if (!user) return res.status(411).json({ message: "User not found ❌" });
+  if (!user) {
+    return res.status(411).json({ message: "User not found ❌" });
+  }
 
   res.json({
     username: user.username,
@@ -149,5 +144,9 @@ app.get("/api/v1/brain/:shareLink", async (req, res) => {
   });
 });
 
-// ====== Export for Vercel ======
-export default app;
+// ====== Start Server (for Render) ======
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
