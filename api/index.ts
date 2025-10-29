@@ -1,22 +1,153 @@
-import express, { Request, Response } from "express";
+import express from "express";
+import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 import cors from "cors";
+import dotenv from "dotenv";
+dotenv.config();
+
+import { contentModel, linkModel, userModel } from "../src/db";
+import { userMiddleware } from "../src/middleware";
+import { randomHashCreate } from "../src/hashCreate";
+import { JWT_PASSWORD, MONGO_URI } from "../src/config";
 
 const app = express();
 
-app.use(cors());
+// ====== Middleware ======
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173", // for local frontend dev
+      "https://secondbrainapplication-git-master-ayushsonawales-projects.vercel.app", // your frontend prod
+    ],
+    methods: ["GET", "POST", "DELETE", "PUT", "OPTIONS"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
-app.get("/api", (req: Request, res: Response) => {
-  res.json({ message: "Backend is live 🚀" });
+// ====== MongoDB Connection ======
+mongoose
+  .connect(MONGO_URI as string)
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// ====== Routes ======
+
+// --- Health check ---
+app.get("/", (req, res) => {
+  res.send("🚀 Backend is live and running!");
 });
 
-app.post("/api/register", (req: Request, res: Response) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: "Missing fields" });
+// --- Signup ---
+app.post("/api/v1/signup", async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    await userModel.create({ username, password });
+    res.json({ message: "User signed up successfully ✅" });
+  } catch (e) {
+    res.status(411).json({ message: "User already exists ❌" });
   }
-  // logic to create user
-  res.json({ message: "User created successfully", user: { email } });
 });
 
+// --- Signin ---
+app.post("/api/v1/signin", async (req, res) => {
+  const { username, password } = req.body;
+  const existingUser = await userModel.findOne({ username, password });
+  if (existingUser) {
+    const token = jwt.sign({ id: existingUser._id }, JWT_PASSWORD);
+    res.json({ token });
+  } else {
+    res.status(403).json({ message: "Incorrect credentials ❌" });
+  }
+});
+
+// --- Add Content ---
+app.post("/api/v1/content", userMiddleware, async (req, res) => {
+  const { link, type, title } = req.body;
+  await contentModel.create({
+    link,
+    type,
+    title,
+    // @ts-ignore
+    userId: req.userId,
+    tags: [],
+  });
+  res.json({ message: "Content added ✅" });
+});
+
+// --- Get All Content ---
+app.get("/api/v1/content", userMiddleware, async (req, res) => {
+  // @ts-ignore
+  const userId = req.userId;
+  const content = await contentModel
+    .find({ userId })
+    .populate("userId", "username");
+  res.json({ content });
+});
+
+// --- Delete Content ---
+app.delete("/api/v1/content", userMiddleware, async (req, res) => {
+  const { contentId } = req.body;
+  await contentModel.deleteMany({
+    _id: contentId,
+    // @ts-ignore
+    userId: req.userId,
+  });
+  res.json({ message: "Content deleted ✅" });
+});
+
+// --- Share Brain ---
+app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
+  const { share } = req.body;
+  if (share) {
+    const existingLink = await linkModel.findOne({
+      // @ts-ignore
+      userId: req.userId,
+    });
+
+    if (existingLink) return res.json({ hash: existingLink.hash });
+
+    const hash = randomHashCreate(10);
+    await linkModel.create({
+      // @ts-ignore
+      userId: req.userId,
+      hash,
+    });
+
+    res.json({ hash });
+  } else {
+    await linkModel.deleteOne({
+      // @ts-ignore
+      userId: req.userId,
+    });
+    res.json({ message: "Removed shared link ❌" });
+  }
+});
+
+// --- Get Shared Brain by Hash ---
+app.get("/api/v1/brain/:shareLink", async (req, res) => {
+  const hash = req.params.shareLink;
+
+  const link = await linkModel.findOne({ hash });
+  if (!link) return res.status(411).json({ message: "Invalid share link ❌" });
+
+  const content = await contentModel.find({
+    // @ts-ignore
+    userId: link.userId,
+  });
+
+  const user = await userModel.findOne({
+    // @ts-ignore
+    _id: link.userId,
+  });
+
+  if (!user) return res.status(411).json({ message: "User not found ❌" });
+
+  res.json({
+    username: user.username,
+    content,
+  });
+});
+
+// ====== Export for Vercel ======
 export default app;
